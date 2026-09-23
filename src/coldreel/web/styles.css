@@ -1,0 +1,58 @@
+:root {
+  --bg: #0f1216; --panel: #161b22; --line: #2a313b; --text: #e6e9ee; --muted: #8b95a5;
+  --accent: #4fa3ff; --seg: #3b8ee6; --seg-hover: #7cc0ff; --seg-active: #ffd166;
+  --unindexed: repeating-linear-gradient(45deg, #3a4150 0 6px, #2a313b 6px 12px);
+  --ok: #4cd18a; --warn: #ffb454; --bad: #ff6b6b;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--text); font: 14px/1.4 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+button, input { font: inherit; color: inherit; }
+button { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+button:hover { border-color: var(--accent); }
+button.ghost { background: transparent; }
+button:disabled { opacity: .5; cursor: default; }
+input[type=date] { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; color-scheme: dark; }
+.muted { color: var(--muted); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel); position: sticky; top: 0; z-index: 2; }
+.brand { font-weight: 600; letter-spacing: .3px; }
+.brand .muted { font-weight: 400; font-size: 12px; margin-left: 8px; }
+.daynav { display: flex; gap: 6px; align-items: center; }
+.layout { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 50px); }
+.cams { border-right: 1px solid var(--line); padding: 12px; overflow: auto; }
+.section-title { font-size: 11px; text-transform: uppercase; letter-spacing: .8px; color: var(--muted); margin: 8px 0; }
+#cameras { list-style: none; margin: 0; padding: 0; }
+#cameras li { padding: 8px 10px; border-radius: 6px; cursor: pointer; border: 1px solid transparent; }
+#cameras li:hover { background: var(--panel); }
+#cameras li.active { border-color: var(--accent); background: var(--panel); }
+#cameras .name { font-weight: 600; }
+#cameras .meta { font-size: 12px; color: var(--muted); }
+.content { padding: 12px 16px; min-width: 0; }
+.summary { margin-bottom: 8px; }
+.timeline { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 8px 8px 10px; }
+.hours { position: relative; height: 16px; font-size: 10px; color: var(--muted); }
+.hours span { position: absolute; transform: translateX(-50%); }
+.track { position: relative; height: 34px; background: #0b0e12; border-radius: 4px; overflow: hidden; }
+.track .tick { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--line); }
+.track .seg { position: absolute; top: 6px; height: 22px; background: var(--seg); border-radius: 2px; min-width: 2px; cursor: pointer; }
+.track .seg:hover { background: var(--seg-hover); }
+.track .seg.active { background: var(--seg-active); }
+.track .seg.av1new { background: #8a6d3b; }
+.track .file { position: absolute; top: 2px; height: 30px; background: var(--unindexed); opacity: .8; border-radius: 2px; cursor: pointer; }
+.track .file:hover { opacity: 1; }
+.track .now { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--seg-active); pointer-events: none; }
+.player { margin: 12px 0; }
+video { width: 100%; max-height: 62vh; background: #000; border-radius: 8px; border: 1px solid var(--line); }
+.clipinfo { margin-top: 6px; font-size: 13px; }
+.clips { width: 100%; border-collapse: collapse; font-size: 13px; }
+.clips th, .clips td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); }
+.clips th { color: var(--muted); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; }
+.clips tr.active td { background: rgba(255, 209, 102, .12); }
+.clips tr:hover td { background: rgba(79, 163, 255, .08); cursor: pointer; }
+.badge { display: inline-block; padding: 1px 6px; border-radius: 10px; font-size: 11px; border: 1px solid var(--line); color: var(--muted); }
+.badge.ok { color: var(--ok); border-color: var(--ok); }
+.badge.warn { color: var(--warn); border-color: var(--warn); }
+.badge.bad { color: var(--bad); border-color: var(--bad); }
+@media (max-width: 800px) {
+  .layout { grid-template-columns: 1fr; }
+  .cams { border-right: 0; border-bottom: 1px solid var(--line); max-height: 30vh; }
+}

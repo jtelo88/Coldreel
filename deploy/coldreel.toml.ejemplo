@@ -1,0 +1,20 @@
+# Coldreel — configuración. Copiar a ./coldreel.toml (ignorado por git) o apuntar con $COLDREEL_CONFIG.
+# Cualquier campo puede ir también como variable de entorno COLDREEL_<CAMPO>.
+
+archive_root = "/nvr/video"                  # archivo de nvr-backup (solo lectura)
+data_dir = "/var/lib/coldreel"               # índice SQLite propio
+cache_dir = "/var/lib/coldreel/cache"        # MP4 derivados (regenerables)
+cache_max_bytes = 21474836480                # 20 GiB; en producción, un dataset propio y 1–2 TB
+
+remux_bin = "/nvr/video/meta/tools/remux-v4.2.2/bin/remux"
+ubvinfo_bin = "/nvr/video/meta/tools/remux-v4.2.2/bin/ubv-info"
+
+nice = 19
+ionice_idle = true
+index_jobs = 2
+remux_jobs = 2
+
+host = "127.0.0.1"                           # para la LAN: la IP del nodo + auth obligatoria
+port = 8080
+# auth = "usuario:clave"
+sync_interval_s = 300

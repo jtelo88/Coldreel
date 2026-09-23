@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coldreel</title>
+<link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand">Coldreel <span class="muted" id="health"></span></div>
+  <div class="daynav">
+    <button id="prevDay" title="Día anterior">‹</button>
+    <input type="date" id="day">
+    <button id="nextDay" title="Día siguiente">›</button>
+    <button id="today" class="ghost">Hoy</button>
+    <button id="indexDay" class="ghost" title="Inspeccionar los ficheros de este día que aún no tienen particiones">Indexar día</button>
+  </div>
+</header>
+<main class="layout">
+  <aside class="cams">
+    <div class="section-title">Cámaras</div>
+    <ul id="cameras"></ul>
+  </aside>
+  <section class="content">
+    <div id="summary" class="summary muted">Elige una cámara.</div>
+    <div class="timeline" id="timeline">
+      <div class="hours" id="hours"></div>
+      <div class="track" id="track"></div>
+    </div>
+    <div class="player">
+      <video id="video" controls preload="metadata" playsinline></video>
+      <div id="clipInfo" class="clipinfo muted"></div>
+    </div>
+    <div class="section-title">Grabaciones del día</div>
+    <table class="clips"><thead><tr><th>Inicio</th><th>Duración</th><th>Códec</th><th>Fichero</th><th></th></tr></thead>
+      <tbody id="clips"></tbody></table>
+  </section>
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>

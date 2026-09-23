@@ -1,0 +1,28 @@
+# systemd — Coldreel (visor del respaldo del NVR). Instalar en /etc/systemd/system/coldreel.service
+# Requiere: el repo en /opt/coldreel con `uv sync` hecho, /etc/coldreel/coldreel.toml y un usuario
+# `coldreel` con lectura de /nvr/video. Sin Condition*: si el pool no está montado, el servicio
+# arranca igual y la API responde con el índice que tenga (nunca queda "skipped" en silencio).
+[Unit]
+Description=Coldreel — visor web del respaldo del NVR
+After=network-online.target zfs-mount.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=coldreel
+Group=coldreel
+WorkingDirectory=/opt/coldreel
+Environment=COLDREEL_CONFIG=/etc/coldreel/coldreel.toml
+ExecStart=/opt/coldreel/.venv/bin/coldreel serve
+Restart=on-failure
+RestartSec=10
+Nice=15
+IOSchedulingClass=idle
+ProtectSystem=strict
+ReadWritePaths=/var/lib/coldreel
+ReadOnlyPaths=/nvr/video
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

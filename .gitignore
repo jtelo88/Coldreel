@@ -1,0 +1,11 @@
+# entorno y derivados locales
+.venv/
+var/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+dist/
+build/
+coldreel.toml
+.DS_Store
