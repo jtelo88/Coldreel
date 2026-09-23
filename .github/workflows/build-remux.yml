@@ -44,8 +44,9 @@ jobs:
       - name: Rust estable
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Caché de cargo y FFmpeg compilado
-        uses: actions/cache@v4
+      - name: Caché de cargo y FFmpeg compilado (restaurar)
+        uses: actions/cache/restore@v4
+        id: cache
         with:
           path: |
             ~/.cargo/registry
@@ -64,27 +65,59 @@ jobs:
         working-directory: upstream
         run: cargo test --locked --release
 
+      # Guardar la caché aunque falle un paso posterior: compilar FFmpeg cuesta ~14 min.
+      - name: Caché de cargo y FFmpeg compilado (guardar)
+        if: always() && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            upstream/target
+          key: remux-jammy-x86_64-${{ hashFiles('upstream/Cargo.lock') }}
+
       - name: Empaquetar
         id: pkg
         working-directory: upstream
+        shell: bash
         run: |
+          set -x
+          git config --global --add safe.directory '*'
+          ls -la target/release | grep -v '\.d$' | head -40
           sha=$(git rev-parse HEAD); short=${sha:0:12}
           date=$(git show -s --format=%cI HEAD)
           mkdir -p ../dist/bin
-          cp target/release/remux target/release/ubv-info target/release/ubv-anonymise ../dist/bin/
-          cp LICENSE.txt ../dist/
-          printf 'upstream=petergeneric/unifi-protect-remux\ncommit=%s\ncommit_date=%s\nbuilt=%s\ntarget=x86_64-unknown-linux-gnu\ncontainer=ubuntu:22.04\nrustc=%s\n' \
-            "$sha" "$date" "$(date -u +%FT%TZ)" "$(rustc --version)" > ../dist/BUILD-INFO.txt
+          for b in remux ubv-info ubv-anonymise; do
+            if [ -x "target/release/$b" ]; then cp "target/release/$b" ../dist/bin/; else echo "AVISO: no existe target/release/$b"; fi
+          done
+          test -x ../dist/bin/remux && test -x ../dist/bin/ubv-info
+          cp LICENSE.txt ../dist/ || true
+          rustv=$(rustc --version || echo desconocido)
+          {
+            echo "upstream=petergeneric/unifi-protect-remux"
+            echo "commit=$sha"
+            echo "commit_date=$date"
+            echo "built=$(date -u +%FT%TZ)"
+            echo "target=x86_64-unknown-linux-gnu"
+            echo "container=ubuntu:22.04"
+            echo "rustc=$rustv"
+          } > ../dist/BUILD-INFO.txt
           (cd ../dist && sha256sum bin/* LICENSE.txt BUILD-INFO.txt > SHA256SUMS)
           tar czf "../remux-main-${short}-linux-x86_64.tar.gz" -C ../dist .
-          ../dist/bin/remux --version; ../dist/bin/ubv-info --version
+          ../dist/bin/remux --version || true
+          ../dist/bin/ubv-info --version || true
           echo "short=$short" >> "$GITHUB_OUTPUT"; echo "sha=$sha" >> "$GITHUB_OUTPUT"; echo "date=$date" >> "$GITHUB_OUTPUT"
 
-      - name: Artefacto
+      - name: Artefacto (también si falla el empaquetado, para diagnóstico)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: remux-main-${{ steps.pkg.outputs.short }}-linux-x86_64
-          path: dist/
+          name: remux-main-${{ steps.pkg.outputs.short || 'sin-sha' }}-linux-x86_64
+          path: |
+            dist/
+            upstream/target/release/remux
+            upstream/target/release/ubv-info
+          if-no-files-found: warn
 
       - name: Release remux-main-<sha>
         uses: softprops/action-gh-release@v2
