@@ -33,6 +33,9 @@ volcado completo de la base de datos de Protect. El 2026-09-23, al arrancar el p
 
 - Hasta la fase 2 no hay eventos, miniaturas ni caras: la línea de tiempo muestra grabaciones.
 - El AV1 de pista 1004 se ve en la línea de tiempo pero no se reproduce hasta compilar `remux main`.
+  **Resuelto el 2026-09-23:** build `remux-main-d09c3e942bef` (v4.2.2-13, FFmpeg 9) compilado por
+  `.github/workflows/build-remux.yml`, verificado con un `.ubv` AV1 4K real (1 partición → 1 MP4) y
+  sin regresión en H.264 (mismos nombres de MP4). Instalado en `meta/tools/remux-main-<sha>/`.
 - Un solo proceso con una conexión SQLite serializada por candado: suficiente para un usuario
   doméstico; si hiciera falta más, pasar a una conexión por hilo.
 

@@ -128,5 +128,5 @@ jobs:
             Binarios de [petergeneric/unifi-protect-remux](https://github.com/petergeneric/unifi-protect-remux)
             en el commit `${{ steps.pkg.outputs.sha }}` (${{ steps.pkg.outputs.date }}), compilados por
             `.github/workflows/build-remux.yml` (ubuntu:22.04, FFmpeg estático). Incluye soporte AV1 pista 1004.
-            Licencia y fuente: las del proyecto upstream (GPL; `LICENSE.txt` en el archivo).
+            Licencia y fuente: las del proyecto upstream (AGPL-3.0; `LICENSE.txt` en el archivo).
           files: remux-main-*.tar.gz
