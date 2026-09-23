@@ -1,0 +1,99 @@
+# Compila `remux` / `ubv-info` de petergeneric/unifi-protect-remux desde un commit de `master`
+# (aún sin release con soporte AV1 pista 1004) en GitHub Actions, con la misma receta que su
+# propio `release-linux.yml` (contenedor ubuntu:22.04 = glibc compatible con Debian 12+, FFmpeg
+# estático), y publica los binarios como assets de una release `remux-main-<sha>` de este repo.
+# En MIA-PVE-02 no hay toolchain y no queremos instalarlo en el host.
+name: Build remux (upstream main)
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "commit o rama de petergeneric/unifi-protect-remux"
+        required: false
+        default: "master"
+  push:
+    branches: [main]
+    paths: [".github/workflows/build-remux.yml"]
+
+permissions:
+  contents: write
+
+env:
+  UPSTREAM_REF: ${{ github.event.inputs.ref || 'd09c3e942bef9fac7ffb337068c6918c330a814a' }}
+
+jobs:
+  build:
+    name: cli-linux-x86_64
+    runs-on: ubuntu-24.04
+    container: ubuntu:22.04
+    steps:
+      - name: Dependencias de compilación (FFmpeg estático)
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential nasm pkg-config libclang-dev curl git ca-certificates xz-utils perl
+
+      - name: Fuente upstream
+        uses: actions/checkout@v4
+        with:
+          repository: petergeneric/unifi-protect-remux
+          ref: ${{ env.UPSTREAM_REF }}
+          fetch-depth: 0
+          path: upstream
+
+      - name: Rust estable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Caché de cargo y FFmpeg compilado
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            upstream/target
+          key: remux-jammy-x86_64-${{ hashFiles('upstream/Cargo.lock') }}
+          restore-keys: remux-jammy-x86_64-
+
+      - name: Compilar
+        working-directory: upstream
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE/upstream"
+          cargo build --locked --release
+
+      - name: Tests upstream
+        working-directory: upstream
+        run: cargo test --locked --release
+
+      - name: Empaquetar
+        id: pkg
+        working-directory: upstream
+        run: |
+          sha=$(git rev-parse HEAD); short=${sha:0:12}
+          date=$(git show -s --format=%cI HEAD)
+          mkdir -p ../dist/bin
+          cp target/release/remux target/release/ubv-info target/release/ubv-anonymise ../dist/bin/
+          cp LICENSE.txt ../dist/
+          printf 'upstream=petergeneric/unifi-protect-remux\ncommit=%s\ncommit_date=%s\nbuilt=%s\ntarget=x86_64-unknown-linux-gnu\ncontainer=ubuntu:22.04\nrustc=%s\n' \
+            "$sha" "$date" "$(date -u +%FT%TZ)" "$(rustc --version)" > ../dist/BUILD-INFO.txt
+          (cd ../dist && sha256sum bin/* LICENSE.txt BUILD-INFO.txt > SHA256SUMS)
+          tar czf "../remux-main-${short}-linux-x86_64.tar.gz" -C ../dist .
+          ../dist/bin/remux --version; ../dist/bin/ubv-info --version
+          echo "short=$short" >> "$GITHUB_OUTPUT"; echo "sha=$sha" >> "$GITHUB_OUTPUT"; echo "date=$date" >> "$GITHUB_OUTPUT"
+
+      - name: Artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: remux-main-${{ steps.pkg.outputs.short }}-linux-x86_64
+          path: dist/
+
+      - name: Release remux-main-<sha>
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: remux-main-${{ steps.pkg.outputs.short }}
+          name: remux (upstream main ${{ steps.pkg.outputs.short }}) linux x86_64
+          body: |
+            Binarios de [petergeneric/unifi-protect-remux](https://github.com/petergeneric/unifi-protect-remux)
+            en el commit `${{ steps.pkg.outputs.sha }}` (${{ steps.pkg.outputs.date }}), compilados por
+            `.github/workflows/build-remux.yml` (ubuntu:22.04, FFmpeg estático). Incluye soporte AV1 pista 1004.
+            Licencia y fuente: las del proyecto upstream (GPL; `LICENSE.txt` en el archivo).
+          files: remux-main-*.tar.gz
