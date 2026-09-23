@@ -91,7 +91,8 @@ def create_app(settings: Settings, index: Index | None = None, cache: RemuxCache
     def health():
         total, _ = cache.usage()
         return {"ok": True, "version": __version__, "index": index.stats(),
-                "cache": {"bytes": total, "max_bytes": settings.cache_max_bytes}}
+                "cache": {"bytes": total, "max_bytes": settings.cache_max_bytes},
+                "remux": {"bin": str(settings.remux_bin), "av1_1004": settings.remux_av1_1004}}
 
     @app.get("/api/cameras")
     def cameras():

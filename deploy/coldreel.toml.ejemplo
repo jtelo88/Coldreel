@@ -8,6 +8,7 @@ cache_max_bytes = 21474836480                # 20 GiB; en producción, un datase
 
 remux_bin = "/nvr/video/meta/tools/remux-v4.2.2/bin/remux"
 ubvinfo_bin = "/nvr/video/meta/tools/remux-v4.2.2/bin/ubv-info"
+remux_av1_1004 = false                       # true solo con un build de main (scripts/install-remux.sh)
 
 nice = 19
 ionice_idle = true

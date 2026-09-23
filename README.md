@@ -68,8 +68,12 @@ Configuración: `coldreel.toml` (o `$COLDREEL_CONFIG`) y variables `COLDREEL_<CA
 ## Límites conocidos
 
 - **AV1 de firmware nuevo (pista 1004)**: `remux` v4.2.2 no lo convierte. El índice y la línea de
-  tiempo sí funcionan (`ubv-info` lo lee); la reproducción devuelve `501` hasta tener un `remux`
-  compilado de `main`. Esas particiones se marcan en la interfaz.
+  tiempo sí funcionan (`ubv-info` lo lee). Solución: un `remux` compilado de `main` (posterior al
+  2026-04-26). Este repo lo compila en GitHub Actions (`.github/workflows/build-remux.yml`, misma
+  receta que el release de upstream) y lo publica como release `remux-main-<sha>`; se instala con
+  `scripts/install-remux.sh <tag>` y se activa con `remux_bin`, `ubvinfo_bin` y
+  `remux_av1_1004 = true` en `coldreel.toml`. Con el flag en `false` la interfaz marca esas
+  particiones y no intenta el remux.
 - **HEVC/AV1 en el navegador**: se sirve el códec nativo. Chrome/Firefox reproducen AV1; HEVC
   depende del hardware (Safari sí). La transcodificación en caché es de la fase 4.
 - **Eventos, miniaturas y caras** (fases 2–3) necesitan el volcado de la base de datos de Protect,

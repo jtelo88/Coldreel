@@ -25,6 +25,9 @@ class Settings:
     # Herramientas de petergeneric/unifi-protect-remux.
     remux_bin: Path = DEFAULT_TOOLS / "remux"
     ubvinfo_bin: Path = DEFAULT_TOOLS / "ubv-info"
+    # ¿El `remux` instalado convierte el AV1 de firmware nuevo (pista 1004)? v4.2.2 no; un build de
+    # `main` posterior al 2026-04-26 sí. Con `false` esas particiones se marcan sin intentar el remux.
+    remux_av1_1004: bool = False
     # Prioridad: el nodo también copia el NVR y sirve PBS; Coldreel cede siempre.
     nice: int = 19
     ionice_idle: bool = True
@@ -54,7 +57,7 @@ class Settings:
 
 _PATH_FIELDS = {"archive_root", "data_dir", "cache_dir", "remux_bin", "ubvinfo_bin"}
 _INT_FIELDS = {"cache_max_bytes", "nice", "index_jobs", "remux_jobs", "port", "sync_interval_s"}
-_BOOL_FIELDS = {"ionice_idle"}
+_BOOL_FIELDS = {"ionice_idle", "remux_av1_1004"}
 
 
 def _coerce(name: str, value):

@@ -2,7 +2,7 @@
 (() => {
   const $ = (s) => document.querySelector(s);
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
-  const state = { mac: null, day: null, files: [], active: null, coverage: new Set() };
+  const state = { mac: null, day: null, files: [], active: null, coverage: new Set(), av1ok: false };
   const fmtTime = (ms) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
   const fmtDur = (ms) => { if (ms == null) return "—"; const s = Math.round(ms / 1000); const m = Math.floor(s / 60); return m ? `${m} min ${String(s % 60).padStart(2, "0")} s` : `${s} s`; };
   const fmtBytes = (b) => b >= 1e12 ? (b / 1e12).toFixed(2) + " TB" : b >= 1e9 ? (b / 1e9).toFixed(1) + " GB" : (b / 1e6).toFixed(0) + " MB";
@@ -23,7 +23,7 @@
   function shiftDay(n) { const [y, m, d] = state.day.split("-").map(Number); setDay(isoDay(new Date(y, m - 1, d + n))); }
 
   async function loadHealth() {
-    try { const h = await api("/api/health"); $("#health").textContent = `${h.index.files} ficheros · ${h.index.files_indexed} indexados · caché ${fmtBytes(h.cache.bytes)}`; } catch (e) { $("#health").textContent = e.message; }
+    try { const h = await api("/api/health"); state.av1ok = !!(h.remux && h.remux.av1_1004); $("#health").textContent = `${h.index.files} ficheros · ${h.index.files_indexed} indexados · caché ${fmtBytes(h.cache.bytes)}${state.av1ok ? "" : " · sin AV1 nuevo"}`; } catch (e) { $("#health").textContent = e.message; }
   }
 
   async function loadCameras() {
@@ -79,7 +79,7 @@
       for (const p of f.partitions) {
         if (p.t_first_ms == null || p.t_last_ms < a || p.t_first_ms > b) continue;
         nParts++; totalMs += p.duration_ms || 0;
-        const el = document.createElement("div"); el.className = "seg" + (p.video_track === 1004 ? " av1new" : "");
+        const el = document.createElement("div"); el.className = "seg" + (p.video_track === 1004 && !state.av1ok ? " av1new" : "");
         el.style.left = pct(p.t_first_ms) + "%"; el.style.width = Math.max(0.15, pct(p.t_last_ms) - pct(p.t_first_ms)) + "%";
         el.title = `${fmtTime(p.t_first_ms)} → ${fmtTime(p.t_last_ms)} · ${fmtDur(p.duration_ms)} · ${p.codec || "?"}`;
         el.dataset.key = `${f.id}/${p.ordinal}`;
@@ -92,7 +92,7 @@
     const tbody = $("#clips"); tbody.innerHTML = "";
     for (const { f, p } of rows) {
       const tr = document.createElement("tr"); tr.dataset.key = `${f.id}/${p.ordinal}`;
-      const codec = p.video_track === 1004 ? `<span class="badge warn">av1 (pista 1004)</span>` : `<span class="badge">${p.codec || "?"}</span>`;
+      const codec = p.video_track === 1004 && !state.av1ok ? `<span class="badge warn">av1 (pista 1004)</span>` : `<span class="badge">${p.codec || "?"}</span>`;
       tr.innerHTML = `<td>${fmtTime(p.t_first_ms)}</td><td>${fmtDur(p.duration_ms)}</td><td>${codec}</td><td class="muted">${f.rel.split("/").pop()} · #${p.ordinal}${p.smart_events ? ` · ${p.smart_events} ev` : ""}</td><td>${p.cached ? '<span class="badge ok">mp4</span>' : ""}</td>`;
       tr.onclick = () => play(f, p);
       tbody.appendChild(tr);
@@ -112,7 +112,7 @@
     const key = `${f.id}/${p.ordinal}`; state.active = key; highlight(key);
     const v = $("#video"); const info = $("#clipInfo");
     info.textContent = `Preparando ${fmtTime(p.t_first_ms)} (${fmtDur(p.duration_ms)}, ${p.codec || "?"})…`;
-    if (p.video_track === 1004) { info.innerHTML = `<span class="badge warn">AV1 de firmware nuevo</span> remux v4.2.2 no convierte esta partición todavía (hace falta remux compilado de main). El .ubv está íntegro.`; v.removeAttribute("src"); v.load(); return; }
+    if (p.video_track === 1004 && !state.av1ok) { info.innerHTML = `<span class="badge warn">AV1 de firmware nuevo</span> el remux configurado no convierte esta partición (hace falta un build de main y <code>remux_av1_1004 = true</code>). El .ubv está íntegro.`; v.removeAttribute("src"); v.load(); return; }
     try {
       // HEAD primero: dispara el remux (puede tardar unos segundos) y muestra el error si lo hay.
       const r = await fetch(p.clip_url, { method: "HEAD" });

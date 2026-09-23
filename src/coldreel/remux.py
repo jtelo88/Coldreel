@@ -119,8 +119,9 @@ class RemuxCache:
         if m and m.get("sha256") == file_row["sha256"]:
             return m
         vt = file_row.get("video_track")
-        if vt == AV1_NEW_TRACK:
-            raise UnsupportedCodec("AV1 de firmware nuevo (pista 1004): remux v4.2.2 no lo convierte; hace falta remux compilado de main")
+        if vt == AV1_NEW_TRACK and not self.s.remux_av1_1004:
+            raise UnsupportedCodec("AV1 de firmware nuevo (pista 1004): el remux configurado no lo convierte "
+                                   "(hace falta un build de main y `remux_av1_1004 = true`)")
         with self._lock(file_id):
             m = self.manifest(file_id)
             if m and m.get("sha256") == file_row["sha256"]:
@@ -148,7 +149,7 @@ class RemuxCache:
             shutil.rmtree(tmp, ignore_errors=True)
             err = p.stderr[-600:]
             if "NAL unit extends beyond frame boundary" in err or "track=1004" in err:
-                raise UnsupportedCodec("AV1 de firmware nuevo (pista 1004): remux v4.2.2 no lo convierte")
+                raise UnsupportedCodec("AV1 de firmware nuevo (pista 1004): este remux no lo convierte")
             raise RemuxError(f"remux falló ({p.returncode}): {err}")
         clips = match_partitions(partitions, mp4s)
         manifest = {
