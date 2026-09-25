@@ -79,6 +79,14 @@ Configuración: `coldreel.toml` (o `$COLDREEL_CONFIG`) y variables `COLDREEL_<CA
 - **Eventos, miniaturas y caras** (fases 2–3) necesitan el volcado de la base de datos de Protect,
   que el respaldo genera al terminar la copia inicial.
 
+## Despliegue actual (2026-09-25)
+
+Provisional, **en el host MIA-PVE-02**: `coldreel.service` (systemd, usuario sin privilegios) con
+`coldreel.toml` local (auth, `host = 0.0.0.0`, remux de `main` en `meta/tools/remux-main-<sha>/`).
+Destino: un **LXC** en el mismo nodo (`vmbr1` VLAN 8, rootfs pequeño en `local-zfs`, datos en el pool
+`nvr`, `/nvr/video` como bind mount de solo lectura), con Postgres 17 + pgvector para la fase 2. El
+LXC se crea después de que el nodo se una al clúster de Miami (ver `proyectos/cluster-proxmox/` en `techlab`).
+
 ## Estructura
 
 ```
